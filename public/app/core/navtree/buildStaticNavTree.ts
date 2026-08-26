@@ -6,6 +6,7 @@ import { FlagKeys, getFeatureFlagClient } from '@grafana/runtime/internal';
 import { alertingNavEntry } from 'app/features/alerting/unified/navigation/alerting.navEntry';
 
 import { adminNavEntry } from './sections/admin.navEntry';
+import { connectionsNavEntry } from './sections/connections.navEntry';
 import { dashboardsNavEntry } from './sections/dashboards.navEntry';
 import { helpNavEntry } from './sections/help.navEntry';
 import { getHomeNode } from './sections/home.navEntry';
@@ -53,8 +54,8 @@ export function getInitialNavTree(): NavModelItem[] {
   }
 
   const staticTree = applyAppSubUrl(buildStaticNavTree());
-  // Empty sections (cfg/access without children) are pruned like the server
-  // prunes them after its enterprise hooks run.
+  // Empty sections (connections, cfg/access without children) are pruned like
+  // the server prunes them after its enterprise hooks run.
   return pruneEmptyNavSections(staticTree);
 }
 
@@ -69,6 +70,7 @@ const STATIC_NAV_ENTRIES: NavEntryBuilder[] = [
   dashboardsNavEntry,
   profileNavEntry,
   alertingNavEntry,
+  connectionsNavEntry,
   adminNavEntry,
   helpNavEntry,
   bookmarksNavEntry,
