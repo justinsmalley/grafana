@@ -118,6 +118,34 @@ describe('startPlanningInAssistant folder handling', () => {
   });
 });
 
+describe('startPlanningInAssistant skipNavigation', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    stayedPut();
+  });
+
+  it('starts planning on the current page without pushing', () => {
+    expect(startPlanningInAssistant({ ...args, skipNavigation: true })).toBe(true);
+
+    expect(pushMock).not.toHaveBeenCalled();
+    expect(openAssistantMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('attaches picked dashboards as context items', () => {
+    startPlanningInAssistant({
+      ...args,
+      skipNavigation: true,
+      dashboards: [{ uid: 'dash-1', title: 'Checkout' }],
+    });
+
+    const call = openAssistantMock.mock.calls[0][0];
+    expect(call.context).toHaveLength(2);
+    expect(call.context?.[1]?.node.data?.params).toEqual(
+      expect.objectContaining({ dashboardUid: 'dash-1', dashboardTitle: 'Checkout' })
+    );
+  });
+});
+
 describe('buildPlanningInstructions', () => {
   it('carries the full request, the datasource scope, and the plan-first framing', () => {
     const instructions = buildPlanningInstructions(args);
@@ -129,6 +157,20 @@ describe('buildPlanningInstructions', () => {
     expect(instructions).toContain('Prometheus (type: prometheus, uid: prom-1)');
     expect(instructions).toContain('no others exist');
     expect(instructions).toContain('Do NOT save the dashboard');
+    expect(instructions).toContain('starting from a brand-new dashboard');
+  });
+
+  it('lists dashboards and folders the user attached as context', () => {
+    const instructions = buildPlanningInstructions({
+      ...args,
+      dashboards: [{ uid: 'dash-1', title: 'Checkout' }],
+      folders: [{ uid: 'folder-1', title: 'Reliability' }],
+    });
+
+    expect(instructions).toContain('Dashboards the user attached as context');
+    expect(instructions).toContain('Checkout (uid: dash-1)');
+    expect(instructions).toContain('Folders the user attached as context');
+    expect(instructions).toContain('Reliability (uid: folder-1)');
   });
 
   it('does not claim completeness when the datasource scope is truncated', () => {
