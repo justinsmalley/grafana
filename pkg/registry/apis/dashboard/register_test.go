@@ -20,6 +20,7 @@ import (
 	"github.com/grafana/grafana/apps/dashboard/pkg/migration/testutil"
 	common "github.com/grafana/grafana/pkg/apimachinery/apis/common/v0alpha1"
 	"github.com/grafana/grafana/pkg/apimachinery/utils"
+	pref "github.com/grafana/grafana/pkg/services/preference"
 	"github.com/grafana/grafana/pkg/services/user"
 	"github.com/grafana/grafana/pkg/storage/unified/resourcepb"
 )
@@ -184,6 +185,29 @@ func TestDashboardAPIBuilder_Validate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDashboardAPIBuilder_Validate_reservedGlobalHomeUID(t *testing.T) {
+	inputObj := &dashv1.Dashboard{
+		Spec:       common.Unstructured{},
+		TypeMeta:   metav1.TypeMeta{Kind: "Dashboard"},
+		ObjectMeta: metav1.ObjectMeta{Name: pref.GlobalHomeDashboardUID},
+	}
+	b := &DashboardsAPIBuilder{}
+	err := b.Validate(context.Background(), admission.NewAttributesRecord(
+		inputObj,
+		nil,
+		dashv1.DashboardResourceInfo.GroupVersionKind(),
+		"stacks-123",
+		inputObj.Name,
+		dashv1.DashboardResourceInfo.GroupVersionResource(),
+		"",
+		admission.Create,
+		&metav1.CreateOptions{},
+		false,
+		&user.SignedInUser{},
+	), nil)
+	require.ErrorContains(t, err, "reserved for the global home preference")
 }
 
 // mockK8sHandler is a minimal mock for client.K8sHandler used in validateDelete tests.

@@ -62,6 +62,7 @@ import (
 	"github.com/grafana/grafana/pkg/services/folder"
 	"github.com/grafana/grafana/pkg/services/libraryelements"
 	"github.com/grafana/grafana/pkg/services/live"
+	pref "github.com/grafana/grafana/pkg/services/preference"
 	"github.com/grafana/grafana/pkg/services/provisioning"
 	"github.com/grafana/grafana/pkg/services/publicdashboards"
 	"github.com/grafana/grafana/pkg/services/quota"
@@ -355,6 +356,9 @@ func (b *DashboardsAPIBuilder) Validate(ctx context.Context, a admission.Attribu
 	case dashv0.DASHBOARD_RESOURCE:
 		if a.GetName() == home.DASHBOARD_NAME && op != admission.Connect {
 			return fmt.Errorf("no operations are allowed on the home dashboard")
+		}
+		if a.GetName() == pref.GlobalHomeDashboardUID && op != admission.Connect {
+			return fmt.Errorf("dashboard uid %q is reserved for the global home preference", pref.GlobalHomeDashboardUID)
 		}
 
 		// Handle different operations
